@@ -51,3 +51,11 @@ test('headless linking is single-flight and restarts only after success', async 
   assert.equal(restarts, 1);
   assert.match(controller.snapshot().output, /Command failed/);
 });
+
+test('an interrupted setup submission cannot escape the HTTP handler', async () => {
+  const handler = createConnectHandler({ password: 'secret', controller: { run: () => assert.fail('must not run') } });
+  const req = { method: 'POST', headers: { host: 'umbrel:3774', origin: 'http://umbrel:3774', authorization: 'Basic ' + Buffer.from('umbrel:secret').toString('base64') }, async *[Symbol.asyncIterator]() { throw new Error('ECONNRESET'); } };
+  const res = { setHeader() {}, writeHead(code) { this.code = code; }, end() {} };
+  await assert.doesNotReject(handler(req, res));
+  assert.equal(res.code, 400);
+});

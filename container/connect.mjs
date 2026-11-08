@@ -54,16 +54,21 @@ export function createConnectHandler({ password, controller }) {
       let sameOrigin = false;
       try { sameOrigin = new URL(req.headers.origin).host === req.headers.host; } catch {}
       if (!sameOrigin) { res.writeHead(403); return res.end('Forbidden'); }
-      let body = '';
-      for await (const chunk of req) {
-        body += chunk;
-        if (body.length > 1024) { res.writeHead(413); return res.end('Request too large'); }
+      try {
+        let body = '';
+        for await (const chunk of req) {
+          body += chunk;
+          if (body.length > 1024) { res.writeHead(413); return res.end('Request too large'); }
+        }
+        const action = new URLSearchParams(body).get('action');
+        if (!['link', 'status', 'unlink'].includes(action)) { res.writeHead(400); return res.end('Unknown action'); }
+        controller.run(action);
+        res.writeHead(303, { location: '/umbrel/connect' });
+        return res.end();
+      } catch {
+        if (!res.destroyed) { res.writeHead(400); res.end('Setup request interrupted. Reload and try again.'); }
+        return;
       }
-      const action = new URLSearchParams(body).get('action');
-      if (!['link', 'status', 'unlink'].includes(action)) { res.writeHead(400); return res.end('Unknown action'); }
-      controller.run(action);
-      res.writeHead(303, { location: '/umbrel/connect' });
-      return res.end();
     }
     if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
     const state = controller.snapshot();
