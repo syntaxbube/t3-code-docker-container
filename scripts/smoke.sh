@@ -4,7 +4,7 @@ image=${1:?Supply an image}
 name="t3-smoke-${RANDOM}"
 volume="${name}-home"
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true; docker volume rm "$volume" >/dev/null 2>&1 || true' EXIT
-for binary in t3 codex claude; do docker run --rm "$image" "$binary" --version; done
+for binary in t3 codex claude cloudflared; do docker run --rm "$image" "$binary" --version; done
 docker volume create "$volume" >/dev/null
 start() {
   docker run -d --name "$name" --init -e APP_PASSWORD=smoke-test-password -v "$volume:/home/node" -p 127.0.0.1::8080 "$image" >/dev/null
@@ -17,6 +17,11 @@ start() {
   return 1
 }
 start
+# Verify the released CLI exposes Connect without requiring a user account.
+docker exec "$name" t3 connect status --json | jq -e '.relayClient.status == "available"' >/dev/null
+# Setup device codes must not be accessible without the separate app password.
+test "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$port/umbrel/connect")" = 401
+curl -fsS -u umbrel:smoke-test-password "http://127.0.0.1:$port/umbrel/connect" | grep -q 'Link / sign in'
 curl -fsS "http://127.0.0.1:$port/umbrel" | grep -q 'App password'
 # Exercise the real native CLI/database pairing contract through the gateway.
 curl -fsS -D /tmp/t3-pair-headers -o /dev/null \

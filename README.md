@@ -25,6 +25,26 @@ restarts. Enter the app password again to pair a new browser. Both the Umbrel pr
 and the native T3 Code session protect access. The setup page additionally checks
 the app password, including when reached from another container on the Umbrel network.
 
+## T3 Connect remote access
+
+Open **Set up T3 Connect remote access** on the `/umbrel` setup page. When the
+browser asks for credentials, use username **umbrel** and your Umbrel app password.
+Select **Link / sign in**, open the displayed HTTPS sign-in link, and approve the
+device code on your own device. The page refreshes while waiting for approval.
+
+After approval the T3 server restarts to activate its tunnel. This interrupts
+running tasks, so set it up while idle. Use **Status** to check authentication and
+reachability, then sign into the same account in the official desktop/mobile app
+or https://app.t3.codes. **Disconnect** disables remote access and restarts T3.
+It retains the CLI authorization; sign-in credentials and tunnel state persist in
+the mounted home across updates and restarts. No host system service is installed.
+
+The local LAN web UI still follows upstream's sign-in-domain restrictions; linking
+is done through this separate headless setup page. Setup codes and command output
+require the app password and are never written to container logs. The bundled
+Cloudflare tunnel client is pinned and checksum-verified. Actual account approval
+and external reachability must be verified with your T3 account on your Umbrel.
+
 ## Storage and backups
 
 Umbrel mounts `${APP_DATA_DIR}/data/home` at `/home/node`. This contains projects,
@@ -112,8 +132,7 @@ provider OAuth behavior require that integration check; CI does not substitute f
 
 No host Docker socket, privileged mode, host networking, or unrelated host mounts
 are used. The backend listens on container loopback; only the gateway is reachable
-by Umbrel's app proxy, with no direct host-published backend port. Remote internet
-access is outside this package's default configuration.
+by Umbrel's app proxy, with no direct host-published backend port. Remote access through T3 Connect is opt-in through the setup page.
 
 ## Credits and support
 

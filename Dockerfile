@@ -23,6 +23,17 @@ RUN set -eu; \
     echo "$checksum  /tmp/t3.tar.gz" | sha256sum -c -; \
     mkdir -p /opt/t3; tar -xzf /tmp/t3.tar.gz -C /opt/t3 --strip-components=1; \
     ln -s /opt/t3/t3 /usr/local/bin/t3; rm /tmp/t3.tar.gz
+# Pin the same verified tunnel client used by the upstream T3 release.
+RUN set -eu; \
+    case "$TARGETARCH" in \
+      amd64) relay_checksum=ae5e8add7884b0531d66bbca4570d1de491ff6da51e4ebe7eb160cdf241d9e42 ;; \
+      arm64) relay_checksum=2b7203b4fb0ba28a0c1e12f8855ce2c25f76d266a8d5edafac5540b6812acff6 ;; \
+      *) exit 1 ;; \
+    esac; \
+    curl -fL --retry 3 "https://github.com/cloudflare/cloudflared/releases/download/2026.10.4/cloudflared-linux-${TARGETARCH}" -o /usr/local/bin/cloudflared; \
+    echo "$relay_checksum  /usr/local/bin/cloudflared" | sha256sum -c -; \
+    chmod 755 /usr/local/bin/cloudflared
+ENV T3CODE_CLOUDFLARED_PATH=/usr/local/bin/cloudflared
 RUN npm install --global "@openai/codex@${CODEX_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_VERSION}" \
     && npm cache clean --force
 COPY --chown=root:root container/ /opt/umbrel/
