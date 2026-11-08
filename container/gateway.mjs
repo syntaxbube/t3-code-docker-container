@@ -10,7 +10,7 @@ export function createGateway({ password, upstreamPort = 3773, mint }) {
   const target = { hostname: '127.0.0.1', port: upstreamPort };
   const server = http.createServer(async (req, res) => {
     if (req.url === '/umbrel' || req.url === '/umbrel/') {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'", 'referrer-policy': 'no-referrer' });
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'", 'referrer-policy': 'same-origin' });
       return res.end(page);
     }
     if (req.url === '/umbrel/pair') {

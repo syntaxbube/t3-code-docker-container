@@ -89,7 +89,7 @@ alone does not guarantee public package visibility.
 ## Development and verification
 
 ```sh
-node --test tests/*.test.mjs
+CHROMIUM_PATH=/usr/bin/chromium node --test tests/*.test.mjs
 python -m pip install PyYAML
 python scripts/validate.py
 python -m unittest discover -s tests -p 'test_*.py'
@@ -98,7 +98,8 @@ docker buildx build --platform linux/amd64 --load -t t3-umbrel:test .
 bash scripts/smoke.sh t3-umbrel:test
 ```
 
-The gateway tests cover password rejection, cross-origin rejection, native pairing
+The gateway tests cover real Chromium form submission (set `CHROMIUM_PATH` to
+your Chromium/Chrome executable), password rejection, cross-origin rejection, native pairing
 redirects, cookie forwarding, and WebSocket upgrades. CI runs real executable,
 HTTP, pairing, non-root write, shutdown, and recreation/persistence smoke checks on
 both architectures. No provider account is needed for CI.

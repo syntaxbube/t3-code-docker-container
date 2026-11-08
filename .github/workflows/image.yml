@@ -17,7 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/*.test.mjs
+      - name: Test gateway and real browser form submission
+        run: |
+          export CHROMIUM_PATH="$(command -v google-chrome)"
+          test -x "$CHROMIUM_PATH"
+          node --test tests/*.test.mjs
       - run: pip install PyYAML
       - run: python scripts/validate.py
       - run: python -m unittest discover -s tests -p 'test_*.py'

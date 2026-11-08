@@ -17,6 +17,7 @@ test('onboarding requires password and same-origin POST; proxy preserves HTTP an
   const post = (password, requestOrigin = origin) => fetch(`${origin}/umbrel/pair`, { method: 'POST', headers: { origin: requestOrigin, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ password }), redirect: 'manual' });
   assert.equal((await post('wrong')).status, 403);
   assert.equal((await post('secret', 'http://evil.example')).status, 403);
+  assert.equal((await post('secret', 'null')).status, 403);
   assert.equal(minted, 0);
   const paired = await post('secret');
   assert.equal(paired.status, 303);

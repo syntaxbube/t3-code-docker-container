@@ -21,6 +21,14 @@ jobs:
           ref: main
       - id: base
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test gateway and real browser form submission
+        run: |
+          export CHROMIUM_PATH="$(command -v google-chrome)"
+          test -x "$CHROMIUM_PATH"
+          node --test tests/*.test.mjs
       - name: Test updater
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Detect and prepare stable release
