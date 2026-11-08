@@ -1,0 +1,40 @@
+manifestVersion: 1
+id: t3code-t3-code
+storage:
+  dataRoot: data
+category: Development
+name: T3 Code
+version: "0.1.7-umbrel.1"
+tagline: Run Codex and Claude on your Umbrel
+icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
+description: >-
+  Run T3 Code with Codex and Claude Code on your Umbrel and control your coding
+  agents from a browser. Your own provider account or subscription is required.
+
+
+  Open the app and enter the app password shown by Umbrel to pair your browser.
+  Then enable a provider in Settings → Providers and sign in. Codex supports
+  connecting your ChatGPT account from Settings. For Claude, use its provider
+  sign-in flow or run claude auth login in the integrated terminal.
+
+
+  Store projects under /home/node/projects. Projects, conversation history,
+  provider credentials, and settings persist across restarts and upgrades.
+  This community package is independently maintained and is not an official
+  T3 Tools or Umbrel release.
+releaseNotes: >-
+  Initial community package with T3 Code 0.1.7, Codex 0.167.0, Claude Code
+  2.1.319, persistent project storage, and browser pairing through Umbrel.
+developer: T3 Tools Inc
+website: https://t3.codes
+dependencies: []
+repo: https://github.com/syntaxbube/t3-code-docker-container
+support: https://github.com/syntaxbube/t3-code-docker-container/issues
+port: 3774
+gallery: []
+path: /umbrel
+defaultUsername: ""
+defaultPassword: $APP_PASSWORD
+deterministicPassword: true
+submitter: syntaxbube
+submission: https://github.com/syntaxbube/t3-code-docker-container

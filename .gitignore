@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+t3code-t3-code/data/home/*
+!t3code-t3-code/data/home/.gitkeep
