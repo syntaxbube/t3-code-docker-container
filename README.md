@@ -41,6 +41,31 @@ Additional user tools can be installed into the persistent home; do not expect
 system package installations to survive an upgrade. Uninstalling the app may
 remove its data: export or back up projects first.
 
+## Automatic stable updates
+
+GitHub Actions checks upstream T3 Code releases every six hours (at 00:17,
+06:17, 12:17, and 18:17 UTC; GitHub may delay scheduled jobs). You can also run
+**Actions → Update stable T3 Code → Run workflow** for an immediate check.
+
+Only newer stable `vX.Y.Z` releases qualify; drafts and prereleases are ignored.
+The updater requires both Linux archives and their published SHA-256 checksums,
+updates the Dockerfile in a temporary candidate, then builds and smoke-tests AMD64
+and ARM64. After both pass, it publishes the multi-platform image and commits the
+new version, release notes, Dockerfile checksums, and pinned image digest to `main`.
+The commit and release tag are pushed together. Codex and Claude stay pinned.
+
+Failed checks do not change the installed store package. If `main` changes during
+the build, promotion stops; the next check retries from current `main`. Check the
+workflow logs for failures. Standard GitHub Actions email notifications can notify
+repository maintainers of failed runs. Updates become available through Umbrel;
+the workflow does not force-upgrade running Umbrel installations.
+
+No extra access token is needed: the workflow uses its built-in `GITHUB_TOKEN`
+with package publishing and repository write permissions. [Bot pushes do not start
+a second image workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow); the updater has already built and tested those images.
+GitHub can [disable scheduled workflows in inactive public repositories after
+60 days](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule); re-enable the workflow in Actions if that happens.
+
 ## Image and releases
 
 Images are published publicly at
@@ -67,6 +92,7 @@ alone does not guarantee public package visibility.
 node --test tests/*.test.mjs
 python -m pip install PyYAML
 python scripts/validate.py
+python -m unittest discover -s tests -p 'test_*.py'
 bash -n scripts/smoke.sh
 docker buildx build --platform linux/amd64 --load -t t3-umbrel:test .
 bash scripts/smoke.sh t3-umbrel:test

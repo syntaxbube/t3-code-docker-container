@@ -1,0 +1,134 @@
+name: Update stable T3 Code
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: update-stable-t3
+  cancel-in-progress: false
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    outputs:
+      available: ${{ steps.release.outputs.available }}
+      version: ${{ steps.release.outputs.version }}
+      base: ${{ steps.base.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - id: base
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Test updater
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Detect and prepare stable release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/update_t3.py prepare --output-dir /tmp/t3-candidate
+      - uses: actions/upload-artifact@v4
+        if: steps.release.outputs.available == 'true'
+        with:
+          name: t3-candidate
+          path: /tmp/t3-candidate/
+          retention-days: 7
+  build:
+    needs: detect
+    if: needs.detect.outputs.available == 'true'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.detect.outputs.base }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: t3-candidate
+          path: /tmp/t3-candidate
+      - run: cp /tmp/t3-candidate/Dockerfile Dockerfile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/*.test.mjs
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: t3-umbrel:test
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+      - run: bash scripts/smoke.sh t3-umbrel:test
+      - name: Publish tested candidate
+        env:
+          VERSION: ${{ needs.detect.outputs.version }}
+          BASE_SHA: ${{ needs.detect.outputs.base }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}
+          docker tag t3-umbrel:test "$IMAGE:candidate-${VERSION}-${BASE_SHA}-${ARCH}"
+          docker push "$IMAGE:candidate-${VERSION}-${BASE_SHA}-${ARCH}"
+  promote:
+    needs: [detect, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.detect.outputs.version }}
+      BASE_SHA: ${{ needs.detect.outputs.base }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Refuse to overwrite changes made during the build
+        run: test "$(git rev-parse HEAD)" = "$BASE_SHA"
+      - uses: actions/download-artifact@v4
+        with:
+          name: t3-candidate
+          path: /tmp/t3-candidate
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish multi-platform release and update store
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}
+          TAG="${VERSION}-umbrel.1"
+          docker buildx imagetools create --tag "$IMAGE:$TAG" \
+            "$IMAGE:candidate-${VERSION}-${BASE_SHA}-amd64" \
+            "$IMAGE:candidate-${VERSION}-${BASE_SHA}-arm64"
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE:$TAG" | awk '$1 == "Digest:" { print $2; exit }')
+          python scripts/update_t3.py promote --candidate /tmp/t3-candidate --digest "$DIGEST"
+      - run: pip install PyYAML
+      - run: python scripts/validate.py
+      - run: git diff --check
+      - name: Push verified update and tag together
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Dockerfile README.md t3code-t3-code/umbrel-app.yml t3code-t3-code/docker-compose.yml
+          git commit -m "Update T3 Code to stable ${VERSION}"
+          git tag "v${VERSION}-umbrel.1"
+          git push --atomic origin HEAD:main "refs/tags/v${VERSION}-umbrel.1"
+          echo "Published and pinned T3 Code ${VERSION} for AMD64 and ARM64." >> "$GITHUB_STEP_SUMMARY"
