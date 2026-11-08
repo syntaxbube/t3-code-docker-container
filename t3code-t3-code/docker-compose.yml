@@ -5,7 +5,7 @@ services:
       APP_HOST: t3code-t3-code_server_1
       APP_PORT: 8080
   server:
-    image: ghcr.io/syntaxbube/t3-code-docker-container:0.1.7-umbrel.2@sha256:bda57661e28edd1c8fa0257db9d05bd026492d90e57e05f75e5a96992ba9c0c8
+    image: ghcr.io/syntaxbube/t3-code-docker-container:0.1.7-umbrel.3@sha256:ba55d2e27166192eb1e60c8cae314030238e37c34eb7a9b94b1c46bf47561ed9
     restart: on-failure
     user: "1000:1000"
     init: true
