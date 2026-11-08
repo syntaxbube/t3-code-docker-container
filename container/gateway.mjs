@@ -40,6 +40,8 @@ export function createGateway({ password, upstreamPort = 3773, mint }) {
     }
     const proxy = http.request({ ...target, path: req.url, method: req.method, headers: req.headers }, upstream => {
       res.writeHead(upstream.statusCode, upstream.headers);
+      upstream.on('aborted', () => res.destroy());
+      upstream.on('error', () => res.destroy());
       upstream.pipe(res);
     });
     proxy.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end('T3 Code is starting. Please retry shortly.'); });

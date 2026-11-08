@@ -37,3 +37,22 @@ test('onboarding requires password and same-origin POST; proxy preserves HTTP an
     socket.on('connect', () => socket.write('GET /ws HTTP/1.1\r\nHost: localhost\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n'));
   });
 });
+
+test('backend abort terminates the proxied response', async (t) => {
+  const upstream = http.createServer((req, res) => {
+    res.writeHead(200, { 'content-length': '10000' });
+    res.write('hello');
+    setTimeout(() => res.destroy(), 20);
+  });
+  await new Promise(r => upstream.listen(0, '127.0.0.1', r));
+  const gateway = createGateway({ password: 'secret', upstreamPort: upstream.address().port, mint: async () => 'token' });
+  await new Promise(r => gateway.listen(0, '127.0.0.1', r));
+  t.after(() => { gateway.closeAllConnections(); gateway.close(); upstream.closeAllConnections(); upstream.close(); });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 1000);
+  try {
+    const response = await fetch(`http://127.0.0.1:${gateway.address().port}/abort`, { signal: controller.signal });
+    await assert.rejects(response.text());
+    assert.equal(controller.signal.aborted, false, 'gateway must close the response before client timeout');
+  } finally { clearTimeout(timeout); }
+});
