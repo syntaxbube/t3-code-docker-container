@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: Development
 name: T3 Code
-version: "0.1.7-umbrel.1"
+version: "0.1.7-umbrel.2"
 tagline: Run Codex and Claude on your Umbrel
 icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
 description: >-
@@ -23,8 +23,9 @@ description: >-
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
-  Initial community package with T3 Code 0.1.7, Codex 0.167.0, Claude Code
-  2.1.319, persistent project storage, and browser pairing through Umbrel.
+  Fixed browser pairing returning Forbidden after entering the correct app
+  password. The setup page now preserves the origin of same-origin form
+  submissions. Added real-browser regression tests. Existing data is preserved.
 developer: T3 Tools Inc
 website: https://t3.codes
 dependencies: []
