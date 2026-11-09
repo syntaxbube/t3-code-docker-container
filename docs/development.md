@@ -73,3 +73,9 @@ The Umbrel proxy's WebSocket behavior and provider OAuth flows cannot be fully v
 ## Contributions
 
 Open an [issue](https://github.com/syntaxbube/t3-code-docker-container/issues) for packaging bugs and include the Umbrel version, architecture, app/package version, the steps to reproduce, and sanitized logs. Never post credentials, app passwords, tokens, pairing URLs, or device codes. This is an independent community project, not an official T3 Tools or Umbrel release.
+
+## Frontend components
+
+The optional React/TypeScript component preview is documented in
+[frontend.md](frontend.md). It uses shadcn-compatible `/components/ui` paths and
+Tailwind CSS. Its build is independent of the container-served setup page.
