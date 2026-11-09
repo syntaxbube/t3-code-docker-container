@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: Development
 name: T3 Code
-version: "0.1.7-umbrel.4"
+version: "0.1.7-umbrel.5"
 tagline: Run Codex and Claude on your Umbrel
 icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
 description: >-
@@ -28,9 +28,10 @@ description: >-
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
-  Refreshed the welcome screen with T3-inspired styling, clearer password
-  guidance, and next steps for providers and remote access. The layout adapts
-  to phones and desktops. Pairing and existing data are unchanged.
+  Introduced the approved T3 and Umbrel glass setup design with a full-background
+  dot pattern visible through the transparent card. Clearer app-password guidance,
+  responsive layout, and reduced-transparency fallback. Pairing, T3 Connect,
+  projects, and saved credentials are preserved.
 developer: T3 Tools Inc
 website: https://t3.codes
 dependencies: []
