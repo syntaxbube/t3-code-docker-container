@@ -1,141 +1,84 @@
-# T3 Code for Umbrel
+<p align="center">
+  <img src="assets/icon.svg" alt="T3 Code icon" width="92">
+</p>
 
-An independent Umbrel community app store packaging [T3 Code](https://t3.codes)
-with Codex and Claude Code. Runs on AMD64 and ARM64 Umbrel machines.
+<h1 align="center">T3 Code for Umbrel</h1>
 
-## Install
+<p align="center">
+  Run T3 Code with Codex and Claude Code on your own Umbrel server — in your browser, with persistent projects and optional remote access.
+</p>
 
-1. In Umbrel, open **App Store → Community App Stores**.
-2. Add `https://github.com/syntaxbube/t3-code-docker-container`.
-3. Install **T3 Code**, then open it from the Umbrel dashboard.
-4. Enter the app password shown in Umbrel's app details and select **Connect to T3 Code**.
-5. In **Settings → Providers**, enable Codex or Claude and sign in with your own account.
-   Codex offers **Connect with ChatGPT**. For Claude, use the provider sign-in flow;
-   if needed, open T3 Code's integrated terminal and run `claude auth login`.
-   Follow the CLI's browser link and paste its returned code into the terminal.
+<p align="center">
+  <a href="https://github.com/syntaxbube/t3-code-docker-container/actions/workflows/image.yml"><img alt="Container image workflow" src="https://github.com/syntaxbube/t3-code-docker-container/actions/workflows/image.yml/badge.svg"></a>
+  <a href="https://github.com/syntaxbube/t3-code-docker-container/actions/workflows/update-t3.yml"><img alt="Stable update workflow" src="https://github.com/syntaxbube/t3-code-docker-container/actions/workflows/update-t3.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <img alt="AMD64 and ARM64" src="https://img.shields.io/badge/platform-AMD64%20%7C%20ARM64-informational.svg">
+</p>
 
-Create projects under `/home/node/projects`. Use the integrated terminal to clone
-repositories and configure Git identity, SSH keys, and repository authentication.
-The bundled tools include Node.js 24, npm, Git, SSH, Bash, ripgrep, Python, make,
-and a C++ compiler. Other language toolchains are not bundled.
+> [!IMPORTANT]
+> This is an **independent Umbrel community app store**, not an official release from T3 Tools or Umbrel. You need your own provider account; provider subscriptions or usage charges are not included.
 
-The dashboard opens `/umbrel`, where already paired browsers can choose **Open
-T3 Code**. Pairing links expire after five minutes; native browser sessions survive
-restarts. Enter the app password again to pair a new browser. Both the Umbrel proxy
-and the native T3 Code session protect access. The setup page additionally checks
-the app password, including when reached from another container on the Umbrel network.
+## Features
 
-## T3 Connect remote access
+- **Browser-based AI coding:** enable Codex or Claude Code in T3 Code's provider settings.
+- **Self-hosted on Umbrel:** installs on AMD64 and ARM64 Umbrel machines, with no host-published backend port.
+- **Persistent workspace:** projects, conversation history, settings, and provider credentials survive container recreation and app updates.
+- **Optional T3 Connect:** link your server to your T3 account for remote access from supported clients.
+- **Verified releases:** container builds and smoke tests cover both architectures; upstream stable T3 Code releases are checked automatically.
 
-Open **Set up T3 Connect remote access** on the `/umbrel` setup page. When the
-browser asks for credentials, use username **umbrel** and your Umbrel app password.
-Select **Link / sign in**, open the displayed HTTPS sign-in link, and approve the
-device code on your own device. The page refreshes while waiting for approval.
+## Requirements
 
-After approval the T3 server restarts to activate its tunnel. This interrupts
-running tasks, so set it up while idle. Use **Status** to check authentication and
-reachability, then sign into the same account in the official desktop/mobile app
-or https://app.t3.codes. **Disconnect** disables remote access and restarts T3.
-It retains the CLI authorization; sign-in credentials and tunnel state persist in
-the mounted home across updates and restarts. No host system service is installed.
+| Requirement | Details |
+| --- | --- |
+| Host | Running Umbrel installation with support for community app stores |
+| CPU | AMD64 (x86-64) or ARM64 |
+| Provider | Your own Codex/ChatGPT or Claude account, according to the provider's access requirements |
+| Network | Internet access for downloading the app and authenticating providers |
+| Optional | A T3 account to set up T3 Connect remote access |
 
-The local LAN web UI still follows upstream's sign-in-domain restrictions; linking
-is done through this separate headless setup page. Setup codes and command output
-require the app password and are never written to container logs. The bundled
-Cloudflare tunnel client is pinned and checksum-verified. Actual account approval
-and external reachability must be verified with your T3 account on your Umbrel.
+## Quick start
 
-## Storage and backups
+1. Open **Umbrel → App Store → Community App Stores**.
+2. Add this store: **`https://github.com/syntaxbube/t3-code-docker-container`**.
+3. Install **T3 Code** and open it from the Umbrel dashboard.
+4. Enter the **app password** shown in Umbrel's app details, then select **Connect to T3 Code**.
+5. Open **Settings → Providers**, enable Codex or Claude Code, and sign into your account.
 
-Umbrel mounts `${APP_DATA_DIR}/data/home` at `/home/node`. This contains projects,
-T3 Code databases and history (`.t3`), provider credentials (`.codex`, `.claude`,
-and `.claude.json`), Git configuration, and SSH keys. Treat backups as sensitive.
-Stop the app before taking a manual copy of `data/` for a consistent database backup.
-Restore it with ownership UID/GID `1000:1000`, then start the app. Files outside the
-mounted home do not survive recreation. Avoid storing projects outside it.
+For Codex, choose **Connect with ChatGPT**. For Claude Code, follow the provider sign-in screen; if needed, use `claude auth login` in the integrated terminal and complete the browser/code flow.
 
-The image and `/opt/t3` runtime are separate from user data. Updates replace the
-image without hiding new binaries behind an old persistent installation. Use
-Umbrel app updates, rather than `t3 update` or global npm updates inside the app.
-Additional user tools can be installed into the persistent home; do not expect
-system package installations to survive an upgrade. Uninstalling the app may
-remove its data: export or back up projects first.
+**Your first project:** create or clone a repository under `/home/node/projects` using the integrated terminal. The image includes Node.js 24, npm, Git, SSH, Bash, ripgrep, Python, make, and a C++ compiler. Other language toolchains are not installed by default.
 
-## Automatic stable updates
+Already paired browsers can choose **Open T3 Code** at `/umbrel`. Pairing links expire after five minutes; use the app password again to pair a different browser.
 
-GitHub Actions checks upstream T3 Code releases every six hours (at 00:17,
-06:17, 12:17, and 18:17 UTC; GitHub may delay scheduled jobs). You can also run
-**Actions → Update stable T3 Code → Run workflow** for an immediate check.
+## Remote access with T3 Connect
 
-Only newer stable `vX.Y.Z` releases qualify; drafts and prereleases are ignored.
-The updater requires both Linux archives and their published SHA-256 checksums,
-updates the Dockerfile in a temporary candidate, then builds and smoke-tests AMD64
-and ARM64. After both pass, it publishes the multi-platform image and commits the
-new version, release notes, Dockerfile checksums, and pinned image digest to `main`.
-The commit and release tag are pushed together. Codex and Claude stay pinned.
+T3 Connect is optional and is configured independently of the local browser session.
 
-Failed checks do not change the installed store package. If `main` changes during
-the build, promotion stops; the next check retries from current `main`. Check the
-workflow logs for failures. Standard GitHub Actions email notifications can notify
-repository maintainers of failed runs. Updates become available through Umbrel;
-the workflow does not force-upgrade running Umbrel installations.
+1. On the `/umbrel` page, select **Set up T3 Connect remote access**.
+2. At the credential prompt, enter username **umbrel** and your Umbrel app password.
+3. Select **Link / sign in**, open the displayed HTTPS sign-in link, and approve the device code on your device.
+4. After the server restarts, check **Status** to verify authentication and reachability. Sign into the same account in the official T3 client or at [app.t3.codes](https://app.t3.codes).
 
-No extra access token is needed: the workflow uses its built-in `GITHUB_TOKEN`
-with package publishing and repository write permissions. [Bot pushes do not start
-a second image workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow); the updater has already built and tested those images.
-GitHub can [disable scheduled workflows in inactive public repositories after
-60 days](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule); re-enable the workflow in Actions if that happens.
+Linking and **Disconnect** restart the T3 server and interrupt running tasks, so perform those actions while idle. Disconnect disables remote access but retains CLI authorization. T3 Connect uses a pinned and checksum-verified Cloudflare tunnel client and does not install a host service. External reachability still needs to be verified with your account.
 
-## Image and releases
+## Storage, backups, and updates
 
-Images are published publicly at
-`ghcr.io/syntaxbube/t3-code-docker-container`. Each release builds and smoke-tests
-both architectures on native GitHub runners, then publishes a multi-platform
-manifest. The app's Compose file pins that manifest by digest.
+Umbrel persists `${APP_DATA_DIR}/data/home` as `/home/node` inside the app. This stores projects, conversation history (`.t3`), provider credentials, and Git/SSH configuration. Treat backups as sensitive: **stop the app before making a manual copy of `data/`**, and restore with UID/GID `1000:1000`. Files outside the mounted home may not survive container recreation. Back up before uninstalling.
+
+Update through **Umbrel**, not `t3 update` or global npm updates in the container. The latest stable upstream T3 Code release is checked every six hours, built and smoke-tested for AMD64/ARM64 before publication; running installations are **not** force-upgraded.
 
 Pinned tools: T3 Code **0.1.7**, Codex **0.167.0**, Claude Code **2.1.319**.
-Upstream T3 release archives are verified with architecture-specific SHA-256
-checksums. T3 Code and this packaging are MIT licensed; bundled third-party tools
-retain their respective licenses and account requirements.
 
-For a release, update tool versions and checksums in `Dockerfile`, update listing
-and documentation versions, then push a `v<version>-umbrel.<revision>` tag.
-After the Container image workflow succeeds, obtain the multi-platform digest
-with `docker buildx imagetools inspect`, update the app's Compose image reference,
-and commit it to `main`. Only point the store at a published, anonymously pullable
-image. Images use public GHCR package visibility; source repository visibility
-alone does not guarantee public package visibility.
+Codex and Claude Code versions are currently pinned separately from the automatic T3 Code updater. For implementation and release details, see [Development and releases](docs/development.md).
 
-## Development and verification
+## Troubleshooting
 
-```sh
-CHROMIUM_PATH=/usr/bin/chromium node --test tests/*.test.mjs
-python -m pip install PyYAML
-python scripts/validate.py
-python -m unittest discover -s tests -p 'test_*.py'
-bash -n scripts/smoke.sh
-docker buildx build --platform linux/amd64 --load -t t3-umbrel:test .
-bash scripts/smoke.sh t3-umbrel:test
-```
+Common problems and fixes are covered in the [Troubleshooting and FAQ](docs/troubleshooting.md), including expired pairing links, provider login, T3 Connect, persistence, and logs.
 
-The gateway tests cover real Chromium form submission (set `CHROMIUM_PATH` to
-your Chromium/Chrome executable), password rejection, cross-origin rejection, native pairing
-redirects, cookie forwarding, and WebSocket upgrades. CI runs real executable,
-HTTP, pairing, non-root write, shutdown, and recreation/persistence smoke checks on
-both architectures. No provider account is needed for CI.
+## Development and contributing
 
-Before declaring an Umbrel release fully verified, test on an actual Umbrel:
-install from this store, open through its authenticated proxy, pair a browser,
-authenticate both providers, complete one task with each, and recreate/update the
-app to confirm credentials and projects persist. Umbrel proxy WebSockets and
-provider OAuth behavior require that integration check; CI does not substitute for it.
+See [Development and releases](docs/development.md) for architecture, CI, version updates, smoke tests, and release instructions. Issues and packaging bugs belong in the [issue tracker](https://github.com/syntaxbube/t3-code-docker-container/issues).
 
-No host Docker socket, privileged mode, host networking, or unrelated host mounts
-are used. The backend listens on container loopback; only the gateway is reachable
-by Umbrel's app proxy, with no direct host-published backend port. Remote access through T3 Connect is opt-in through the setup page.
+## Credits and license
 
-## Credits and support
-
-T3 Code: [pingdotgg/t3code](https://github.com/pingdotgg/t3code), by T3 Tools Inc.
-This is not an official T3 Tools or Umbrel release. Report packaging issues in
-[this repository](https://github.com/syntaxbube/t3-code-docker-container/issues).
+[T3 Code](https://github.com/pingdotgg/t3code) is made by T3 Tools Inc. This independently maintained Umbrel packaging and T3 Code are MIT licensed; bundled third-party tools retain their own licenses, terms, and account requirements. See [LICENSE](LICENSE).
