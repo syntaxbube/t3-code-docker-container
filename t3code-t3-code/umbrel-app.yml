@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: Development
 name: T3 Code
-version: "0.1.7-umbrel.3"
+version: "0.1.7-umbrel.4"
 tagline: Run Codex and Claude on your Umbrel
 icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
 description: >-
@@ -28,10 +28,9 @@ description: >-
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
-  Added password-protected T3 Connect setup with device-code sign-in, status,
-  and disconnect controls. Includes the verified Cloudflare tunnel client.
-  Open Set up T3 Connect remote access on the setup page to link your account.
-  Linking or disconnecting restarts the server; existing data is preserved.
+  Refreshed the welcome screen with T3-inspired styling, clearer password
+  guidance, and next steps for providers and remote access. The layout adapts
+  to phones and desktops. Pairing and existing data are unchanged.
 developer: T3 Tools Inc
 website: https://t3.codes
 dependencies: []
