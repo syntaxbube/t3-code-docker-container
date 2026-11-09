@@ -1,7 +1,8 @@
+import { welcomePage } from './welcome.mjs';
 import http from 'node:http';
 import { timingSafeEqual, createHash } from 'node:crypto';
 
-const page = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>T3 Code on Umbrel</title><style>body{font:18px system-ui;background:#141416;color:#eee;max-width:36rem;margin:12vh auto;padding:24px}input,button{font:inherit;padding:12px;margin:8px 0;display:block;width:100%;box-sizing:border-box}button{cursor:pointer}a{color:#adc8ff}</style><h1>T3 Code</h1><p>Connect this browser using the password shown in the Umbrel app details.</p><form method="post" action="/umbrel/pair"><label>App password<input type="password" name="password" autocomplete="current-password" required></label><button>Connect to T3 Code</button></form><p>Already connected? <a href="/">Open T3 Code</a>.</p><p><a href="/umbrel/connect">Set up T3 Connect remote access</a> (username: umbrel; use your app password).</p><p>After connecting, enable Codex or Claude in Settings → Providers and sign in. Create projects inside <code>/home/node/projects</code> to keep your work across upgrades.</p></html>`;
+
 const digest = value => createHash('sha256').update(value).digest();
 
 export function createGateway({ password, upstreamPort = 3773, mint, connectHandler }) {
@@ -12,7 +13,7 @@ export function createGateway({ password, upstreamPort = 3773, mint, connectHand
     if (req.url === '/umbrel/connect' && connectHandler) return connectHandler(req, res);
     if (req.url === '/umbrel' || req.url === '/umbrel/') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'", 'referrer-policy': 'same-origin' });
-      return res.end(page);
+      return res.end(welcomePage);
     }
     if (req.url === '/umbrel/pair') {
       res.setHeader('cache-control', 'no-store');
