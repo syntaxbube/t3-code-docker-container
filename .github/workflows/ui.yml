@@ -1,0 +1,52 @@
+name: Frontend components
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'components/**'
+      - 'frontend/**'
+      - 'lib/**'
+      - 'styles/**'
+      - 'package*.json'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - 'design/glass-setup/**'
+      - 'scripts/render-glass-mockup.tsx'
+      - 'container/welcome.mjs'
+      - 'index.html'
+      - 'components.json'
+      - 'tests/dot-pattern.test.tsx'
+      - '.github/workflows/ui.yml'
+  pull_request:
+    paths:
+      - 'components/**'
+      - 'frontend/**'
+      - 'lib/**'
+      - 'styles/**'
+      - 'package*.json'
+      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - 'design/glass-setup/**'
+      - 'scripts/render-glass-mockup.tsx'
+      - 'container/welcome.mjs'
+      - 'index.html'
+      - 'components.json'
+      - 'tests/dot-pattern.test.tsx'
+      - '.github/workflows/ui.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:ui
+      - run: npm run build
+      - run: npm run build:setup
+      - run: node --test tests/setup-page.test.mjs
+      - run: git diff --exit-code -- container/welcome.mjs

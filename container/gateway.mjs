@@ -12,7 +12,7 @@ export function createGateway({ password, upstreamPort = 3773, mint, connectHand
   const server = http.createServer(async (req, res) => {
     if (req.url === '/umbrel/connect' && connectHandler) return connectHandler(req, res);
     if (req.url === '/umbrel' || req.url === '/umbrel/') {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'", 'referrer-policy': 'same-origin' });
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; font-src data:; form-action 'self'; frame-ancestors 'self'", 'referrer-policy': 'same-origin' });
       return res.end(welcomePage);
     }
     if (req.url === '/umbrel/pair') {
