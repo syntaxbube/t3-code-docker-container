@@ -21,21 +21,26 @@ jobs:
           ref: main
       - id: base
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - name: Test gateway and real browser form submission
-        run: |
-          export CHROMIUM_PATH="$(command -v google-chrome)"
-          test -x "$CHROMIUM_PATH"
-          node --test tests/*.test.mjs
-      - name: Test updater
-        run: python -m unittest discover -s tests -p 'test_*.py'
+      # Poll upstream first. On normal runs without a new stable release,
+      # skip Node setup and the browser/updater test suites.
       - name: Detect and prepare stable release
         id: release
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/update_t3.py prepare --output-dir /tmp/t3-candidate
+      - uses: actions/setup-node@v4
+        if: steps.release.outputs.available == 'true'
+        with:
+          node-version: '24'
+      - name: Test gateway and real browser form submission
+        if: steps.release.outputs.available == 'true'
+        run: |
+          export CHROMIUM_PATH="$(command -v google-chrome)"
+          test -x "$CHROMIUM_PATH"
+          node --test tests/*.test.mjs
+      - name: Test updater
+        if: steps.release.outputs.available == 'true'
+        run: python -m unittest discover -s tests -p 'test_*.py'
       - uses: actions/upload-artifact@v4
         if: steps.release.outputs.available == 'true'
         with:
