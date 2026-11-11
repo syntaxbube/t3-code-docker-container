@@ -7,5 +7,6 @@ test('approved setup submits passwords only to the pairing endpoint and exposes 
   assert.match(welcomePage, /href="\/umbrel\/connect"/);
   assert.match(welcomePage, /class="text-button" href="\/"/);
   assert.doesNotMatch(welcomePage, /<script>|Mockup only|Preview only|class="feedback"/);
-  assert.match(welcomePage, /class="[^"]*setup-dot-pattern/);
+  assert.match(welcomePage, /name="password"/);
+  assert.match(welcomePage, /Set up T3 Connect/);
 });

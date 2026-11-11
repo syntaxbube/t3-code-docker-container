@@ -3,8 +3,8 @@
 The Umbrel package's live setup is static HTML in `container/`. This repository
 now also has a separate Vite + React + TypeScript + Tailwind CSS frontend for
 integrating and reviewing components. The supplied Dot Pattern demo is its entry
-screen. The served setup page is generated from the approved glass design and the same
-React DotPattern component, then committed as static HTML in `container/welcome.mjs`.
+screen. The served setup page is a hand-written static template, committed as
+generated HTML in `container/welcome.mjs`.
 The Docker image needs no React runtime or frontend build step.
 
 ## Run
@@ -24,22 +24,20 @@ npm run test:ui   # SVG instance isolation and provider-free demo rendering
 npm run preview  # Inspect the production build locally
 ```
 
-## Approved glass setup
+## Setup page
 
-`design/glass-setup/template.html` contains the approved T3 × Umbrel panel layout.
-`scripts/render-glass-mockup.tsx` renders the actual DotPattern across its full
-background, with 18% panel tint and 0.5px backdrop blur. It preserves the opaque
-fallback and reduced-transparency treatment.
+`design/glass-setup/template.html` is the full setup page: a minimal pairing
+screen with the password form, a "Set up T3 Connect" link to `/umbrel/connect`,
+and an "Already paired" link. It is plain HTML and CSS with no React or
+DotPattern.
 
 ```sh
-npm run mockup:glass # review-only design/glass-setup/preview.html
+npm run mockup:glass # review copy in design/glass-setup/preview.html
 npm run build:setup  # regenerate container/welcome.mjs for the served setup page
 ```
 
-Production generation removes mockup scripts and restores the real POST pairing
-form, existing-workspace link, and T3 Connect setup link. CI checks the generated
-page stays synchronized. Re-run `build:setup` after editing the template, renderer,
-or DotPattern. Do not edit `container/welcome.mjs` by hand.
+CI checks the generated page stays synchronized. Re-run `build:setup` after
+editing the template. Do not edit `container/welcome.mjs` by hand.
 
 ## Paths and shadcn
 
@@ -97,7 +95,5 @@ its own height. The supplied demo uses a fixed 500px height, full available widt
 and stronger dot fill from the `md` breakpoint onward. It is pointer-inert and
 hidden from assistive technology.
 
-For the proposed setup redesign, the natural placement is behind the welcome
-content, below its glass panel. The approved setup now uses it across the entire background; the translucent
-card sits above it. The standalone Vite demo remains available for component
-development.
+The setup page no longer uses DotPattern. The standalone Vite demo remains
+available for component development.
