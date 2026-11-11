@@ -69,7 +69,7 @@ Stop the app before making a manual backup of `data/` so its database is copied 
 
 Use Umbrel to install app updates. Running `t3 update` or global npm updates inside the container is not supported as an update method. GitHub Actions checks upstream for a stable T3 Code release every six hours. When it finds one, it builds and smoke-tests images for AMD64 and ARM64 before publishing. Umbrel then makes the update available; running installations are not upgraded automatically.
 
-Pinned tools: T3 Code **0.1.8**, Codex **0.167.0**, Claude Code **2.1.319**.
+Pinned tools: T3 Code **0.1.9**, Codex **0.167.0**, Claude Code **2.1.319**.
 
 Codex and Claude Code remain pinned independently of automatic T3 Code updates. The [development guide](docs/development.md) explains how releases are built and published.
 

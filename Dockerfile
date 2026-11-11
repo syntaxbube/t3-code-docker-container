@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM node:24-bookworm-slim
 ARG TARGETARCH
-ARG T3_VERSION=0.1.8
+ARG T3_VERSION=0.1.9
 ARG CODEX_VERSION=0.167.0
 ARG CLAUDE_VERSION=2.1.319
 LABEL org.opencontainers.image.source="https://github.com/syntaxbube/t3-code-docker-container" \
@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Keep the entire upstream runtime tree (client assets and native modules included).
 RUN set -eu; \
     case "$TARGETARCH" in \
-      amd64) arch=x64; checksum=b9c49dc00c23fbbc5961bdaff2d88e556d96c8dbd638c4501e2937c70650a9e5 ;; \
-      arm64) arch=arm64; checksum=2bffbf608eef736c5c35e3431a7e5261d0c909e33d8a8feb83ef26a3747cf8f4 ;; \
+      amd64) arch=x64; checksum=0141025335da334759cecd8db3483e09772f3600ca03674698524e7d94291362 ;; \
+      arm64) arch=arm64; checksum=52023bc5728a4dee4de361ad6fef7c236f1efb2742ff25e29d5c55e2fb662eea ;; \
       *) echo "Unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
     esac; \
-    test "$T3_VERSION" = 0.1.8; \
+    test "$T3_VERSION" = 0.1.9; \
     curl -fL --retry 3 "https://github.com/pingdotgg/t3code/releases/download/v${T3_VERSION}/t3-${T3_VERSION}-linux-${arch}.tar.gz" -o /tmp/t3.tar.gz; \
     echo "$checksum  /tmp/t3.tar.gz" | sha256sum -c -; \
     mkdir -p /opt/t3; tar -xzf /tmp/t3.tar.gz -C /opt/t3 --strip-components=1; \
