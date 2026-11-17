@@ -28,25 +28,31 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/update_t3.py prepare --output-dir /tmp/t3-candidate
-      - uses: actions/setup-node@v4
-        if: steps.release.outputs.available == 'true'
-        with:
-          node-version: '24'
-      - name: Test gateway and real browser form submission
-        if: steps.release.outputs.available == 'true'
-        run: |
-          export CHROMIUM_PATH="$(command -v google-chrome)"
-          test -x "$CHROMIUM_PATH"
-          node --test tests/*.test.mjs
-      - name: Test updater
-        if: steps.release.outputs.available == 'true'
-        run: python -m unittest discover -s tests -p 'test_*.py'
       - uses: actions/upload-artifact@v4
         if: steps.release.outputs.available == 'true'
         with:
           name: t3-candidate
           path: /tmp/t3-candidate/
           retention-days: 7
+  # Tests run in parallel with the candidate image builds; promote requires both.
+  test:
+    needs: detect
+    if: needs.detect.outputs.available == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.detect.outputs.base }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test gateway and real browser form submission
+        run: |
+          export CHROMIUM_PATH="$(command -v google-chrome)"
+          test -x "$CHROMIUM_PATH"
+          node --test tests/*.test.mjs
+      - name: Test updater
+        run: python -m unittest discover -s tests -p 'test_*.py'
   build:
     needs: detect
     if: needs.detect.outputs.available == 'true'
@@ -71,10 +77,6 @@ jobs:
           name: t3-candidate
           path: /tmp/t3-candidate
       - run: cp /tmp/t3-candidate/Dockerfile Dockerfile
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-      - run: node --test tests/*.test.mjs
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -100,7 +102,7 @@ jobs:
           docker tag t3-umbrel:test "$IMAGE:candidate-${VERSION}-${BASE_SHA}-${ARCH}"
           docker push "$IMAGE:candidate-${VERSION}-${BASE_SHA}-${ARCH}"
   promote:
-    needs: [detect, build]
+    needs: [detect, build, test]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

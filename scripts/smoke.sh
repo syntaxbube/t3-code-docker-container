@@ -4,14 +4,15 @@ image=${1:?Supply an image}
 name="t3-smoke-${RANDOM}"
 volume="${name}-home"
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true; docker volume rm "$volume" >/dev/null 2>&1 || true' EXIT
-for binary in t3 codex claude cloudflared; do docker run --rm "$image" "$binary" --version; done
+# One container for all version checks instead of one cold start per binary.
+docker run --rm "$image" sh -ec 'for binary in t3 codex claude cloudflared; do "$binary" --version; done'
 docker volume create "$volume" >/dev/null
 start() {
   docker run -d --name "$name" --init -e APP_PASSWORD=smoke-test-password -v "$volume:/home/node" -p 127.0.0.1::8080 "$image" >/dev/null
   port=$(docker port "$name" 8080/tcp | cut -d: -f2)
-  for attempt in $(seq 1 90); do
+  for attempt in $(seq 1 360); do
     if curl -fsS "http://127.0.0.1:$port/.well-known/t3/environment" > /tmp/t3-descriptor.json; then return; fi
-    sleep 2
+    sleep 0.5
   done
   docker logs "$name"
   return 1

@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
   packages: write
+# Superseded pull request runs are cancelled; pushes and tags always finish publishing.
+concurrency:
+  group: image-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -25,8 +29,9 @@ jobs:
       - run: pip install PyYAML
       - run: python scripts/validate.py
       - run: python -m unittest discover -s tests -p 'test_*.py'
+  # Image build and smoke tests run in parallel with the unit/browser tests; only the
+  # multi-platform manifest (what consumers pull) is gated on the tests passing.
   build:
-    needs: test
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +66,7 @@ jobs:
           docker tag t3-umbrel:test "$IMAGE:sha-${GITHUB_SHA}-${{ matrix.arch }}"
           docker push "$IMAGE:sha-${GITHUB_SHA}-${{ matrix.arch }}"
   manifest:
-    needs: build
+    needs: [test, build]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     steps:
