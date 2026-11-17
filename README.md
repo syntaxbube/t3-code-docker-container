@@ -69,7 +69,7 @@ Stop the app before making a manual backup of `data/` so its database is copied 
 
 Use Umbrel to install app updates. Running `t3 update` or global npm updates inside the container is not supported as an update method. GitHub Actions checks upstream for a stable T3 Code release every six hours. When it finds one, it builds and smoke-tests images for AMD64 and ARM64 before publishing. Umbrel then makes the update available; running installations are not upgraded automatically.
 
-Pinned tools: T3 Code **0.1.9**, Codex **0.167.0**, Claude Code **2.1.319** (downloaded on first start, see below).
+Pinned tools: T3 Code **0.1.10**, Codex **0.167.0**, Claude Code **2.1.319** (downloaded on first start, see below).
 
 **Claude Code is not bundled in the image.** It is proprietary software from Anthropic, so on first start the container downloads it from the npm registry into your own persistent storage (`/home/node/.claude-cli`). The first start therefore takes a little longer and needs internet access. Your use of it is subject to Anthropic's terms. Set the environment variable `T3_INSTALL_CLAUDE_CODE=0` to skip the download. If it fails, the rest of the app still starts and the install is retried on the next restart.
 
