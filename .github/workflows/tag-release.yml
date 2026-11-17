@@ -1,0 +1,24 @@
+name: Tag Umbrel release
+on:
+  push:
+    branches: [main]
+    paths: ['t3code-t3-code/umbrel-app.yml']
+permissions:
+  contents: write
+jobs:
+  tag:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release tag if missing
+        run: |
+          VERSION=$(sed -n 's/^version: "\(.*\)"$/\1/p' t3code-t3-code/umbrel-app.yml)
+          test -n "$VERSION"
+          TAG="v${VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists."
+          else
+            git tag "$TAG"
+            git push origin "refs/tags/${TAG}"
+            echo "Created ${TAG}." >> "$GITHUB_STEP_SUMMARY"
+          fi
