@@ -3,7 +3,6 @@ FROM node:24-bookworm-slim
 ARG TARGETARCH
 ARG T3_VERSION=0.1.10
 ARG CODEX_VERSION=0.167.0
-ARG CLAUDE_VERSION=2.1.319
 LABEL org.opencontainers.image.source="https://github.com/syntaxbube/t3-code-docker-container" \
       org.opencontainers.image.title="T3 Code for Umbrel" \
       org.opencontainers.image.licenses="MIT"
@@ -34,10 +33,17 @@ RUN set -eu; \
     echo "$relay_checksum  /usr/local/bin/cloudflared" | sha256sum -c -; \
     chmod 755 /usr/local/bin/cloudflared
 ENV T3CODE_CLOUDFLARED_PATH=/usr/local/bin/cloudflared
-RUN npm install --global "@openai/codex@${CODEX_VERSION}" "@anthropic-ai/claude-code@${CLAUDE_VERSION}" \
+RUN npm install --global "@openai/codex@${CODEX_VERSION}" \
     && npm cache clean --force
+# Claude Code is proprietary (Anthropic, all rights reserved) and is deliberately NOT
+# bundled in this image. On first start it is downloaded from npm into the user's own
+# persistent home (see container/claude-install.mjs), so each user obtains it from
+# Anthropic directly under their own terms. Set T3_INSTALL_CLAUDE_CODE=0 to disable.
 COPY --chown=root:root container/ /opt/umbrel/
-ENV HOME=/home/node T3CODE_HOME=/home/node/.t3 NODE_ENV=production
+COPY --chown=root:root LICENSE THIRD_PARTY_NOTICES.md licenses/ /usr/share/licenses/t3-umbrel/
+ENV HOME=/home/node T3CODE_HOME=/home/node/.t3 NODE_ENV=production \
+    T3_CLAUDE_CODE_VERSION=2.1.319 \
+    PATH=/home/node/.claude-cli/node_modules/.bin:$PATH
 USER 1000:1000
 WORKDIR /home/node
 EXPOSE 8080

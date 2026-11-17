@@ -25,12 +25,16 @@ description: >-
 
   Store projects under /home/node/projects. Projects, conversation history,
   provider credentials, and settings persist across restarts and upgrades.
+  Claude Code is not bundled; it is downloaded from Anthropic's npm package
+  into your own storage on first start.
+
+
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
   Updated T3 Code to stable release 0.1.10. Both Linux architectures passed
   container smoke tests before publication. Codex and Claude versions are unchanged.
-developer: T3 Tools Inc
+developer: "T3 Tools Inc. (upstream); packaged by syntaxbube"
 website: https://t3.codes
 dependencies: []
 repo: https://github.com/syntaxbube/t3-code-docker-container

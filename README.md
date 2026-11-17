@@ -69,7 +69,9 @@ Stop the app before making a manual backup of `data/` so its database is copied 
 
 Use Umbrel to install app updates. Running `t3 update` or global npm updates inside the container is not supported as an update method. GitHub Actions checks upstream for a stable T3 Code release every six hours. When it finds one, it builds and smoke-tests images for AMD64 and ARM64 before publishing. Umbrel then makes the update available; running installations are not upgraded automatically.
 
-Pinned tools: T3 Code **0.1.10**, Codex **0.167.0**, Claude Code **2.1.319**.
+Pinned tools: T3 Code **0.1.10**, Codex **0.167.0**, Claude Code **2.1.319** (downloaded on first start, see below).
+
+**Claude Code is not bundled in the image.** It is proprietary software from Anthropic, so on first start the container downloads it from the npm registry into your own persistent storage (`/home/node/.claude-cli`). The first start therefore takes a little longer and needs internet access. Your use of it is subject to Anthropic's terms. Set the environment variable `T3_INSTALL_CLAUDE_CODE=0` to skip the download. If it fails, the rest of the app still starts and the install is retried on the next restart.
 
 Codex and Claude Code remain pinned independently of automatic T3 Code updates. The [development guide](docs/development.md) explains how releases are built and published.
 
@@ -83,4 +85,4 @@ See [Development and releases](docs/development.md) for architecture, CI, tests,
 
 ## Credits and license
 
-[T3 Code](https://github.com/pingdotgg/t3code) is developed by T3 Tools Inc. T3 Code and this packaging are MIT licensed. Bundled third-party tools have their own licenses and account requirements. See [LICENSE](LICENSE).
+[T3 Code](https://github.com/pingdotgg/t3code) is developed by T3 Tools Inc. T3 Code and this packaging are MIT licensed. Bundled third-party tools have their own licenses and account requirements; see [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The notices are also included in the image under `/usr/share/licenses/t3-umbrel/`. "T3", "Claude", "Codex" and other names belong to their owners and are used only to identify compatible software; this project is not affiliated with or endorsed by them.

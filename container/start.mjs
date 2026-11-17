@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { mkdir } from 'node:fs/promises';
 import { createGateway } from './gateway.mjs';
 import { createConnectController, createConnectHandler } from './connect.mjs';
+import { ensureClaudeCode } from './claude-install.mjs';
 
 if (!process.env.APP_PASSWORD) throw new Error('APP_PASSWORD must be supplied by Umbrel');
 await mkdir('/home/node/projects', { recursive: true });
@@ -40,13 +41,15 @@ const gateway = createGateway({
   },
 });
 gateway.listen(8080, '0.0.0.0');
-startBackend();
+await ensureClaudeCode();
+if (!stopping) startBackend();
 function stop(signal = 'SIGTERM') {
   if (stopping) return;
   stopping = true;
   connect.stop();
   gateway.close();
   gateway.closeAllConnections();
+  if (!backend) process.exit(0);
   backend.kill(signal);
   setTimeout(() => { backend.kill('SIGKILL'); process.exit(1); }, 20000).unref();
 }

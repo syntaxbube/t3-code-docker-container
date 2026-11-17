@@ -16,7 +16,7 @@ If access still fails, check that the app is running and examine the logs. Note 
 Open **Settings → Providers** and enable the provider first.
 
 - **Codex:** choose **Connect with ChatGPT** and sign in with the appropriate ChatGPT account.
-- **Claude Code:** use the provider sign-in flow. If it does not complete, open the T3 Code integrated terminal, run `claude auth login`, open the CLI-provided link, and paste the returned code into the terminal.
+- **Claude Code:** it is downloaded from npm into `/home/node/.claude-cli` on first start (it is not bundled in the image), so the first start needs internet access and takes longer. Check the container logs for `Claude Code install failed`; restarting retries the download. If `T3_INSTALL_CLAUDE_CODE=0` is set, no download happens. Then use the provider sign-in flow. If it does not complete, open the T3 Code integrated terminal, run `claude auth login`, open the CLI-provided link, and paste the returned code into the terminal.
 
 These providers require your own accounts and are subject to their own access rules, subscriptions, and potential charges. Their availability is not provided by this Umbrel package.
 

@@ -1,3 +1,7 @@
 *
 !container/
 !container/**
+!LICENSE
+!THIRD_PARTY_NOTICES.md
+!licenses/
+!licenses/**
