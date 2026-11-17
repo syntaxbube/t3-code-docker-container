@@ -46,6 +46,12 @@ For a manual release:
 4. After the [Container image workflow](../.github/workflows/image.yml) succeeds, obtain the multi-platform digest with `docker buildx imagetools inspect`.
 5. Update the Compose image reference and commit it to `main` only after confirming that the image can be pulled anonymously.
 
+### Build and CI performance notes
+
+- The [Dockerfile](../Dockerfile) downloads T3 Code and `cloudflared` in separate BuildKit stages that run in parallel with the apt and npm layers. The T3 Code layer is last, so a T3 version bump (the most frequent change) reuses the cached apt and Codex layers. Keep the `ARG T3_VERSION=`, `test "$T3_VERSION" = …;` and `checksum=` line formats unchanged; `scripts/update_t3.py` rewrites them.
+- Image builds and smoke tests run in parallel with the unit and browser tests. Only the multi-platform manifest (`manifest` job) and update promotion require the tests to pass.
+- Superseded pull request runs are cancelled automatically.
+
 Prefer Umbrel-managed application updates to running `t3 update` or global npm upgrades inside the container. Image recreation should replace the runtime without hiding new binaries behind old persisted installations.
 
 ## Local tests
