@@ -31,10 +31,16 @@ test('browser form submission preserves its origin and pairs successfully', { sk
     await rm(profile, { recursive: true, force: true, maxRetries: 5 });
   });
   const endpoint = await new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Chromium did not expose DevTools')), 10000);
-    browser.once('error', reject);
+    // Accumulate stderr: the DevTools line can be split across chunks, and
+    // Chromium's own output is the only clue when CI fails to start it.
+    let output = '';
+    const fail = reason => { clearTimeout(timer); reject(new Error(`${reason}\n--- chromium stderr (last 2000 chars) ---\n${output.slice(-2000)}`)); };
+    const timer = setTimeout(() => fail('Chromium did not expose DevTools'), 20000);
+    browser.once('error', error => fail(`Chromium failed to start: ${error.message}`));
+    browser.once('exit', (code, signal) => fail(`Chromium exited early (code ${code}, signal ${signal})`));
     browser.stderr.on('data', data => {
-      const match = data.toString().match(/DevTools listening on (ws:\/\/\S+)/);
+      output += data.toString();
+      const match = output.match(/DevTools listening on (ws:\/\/\S+)/);
       if (match) { clearTimeout(timer); resolve(match[1]); }
     });
   });
