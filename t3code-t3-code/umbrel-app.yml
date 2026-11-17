@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: Development
 name: T3 Code
-version: "0.1.10-umbrel.1"
+version: "0.1.10-umbrel.2"
 tagline: Run Codex and Claude on your Umbrel
 icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
 description: >-
@@ -32,8 +32,11 @@ description: >-
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
-  Updated T3 Code to stable release 0.1.10. Both Linux architectures passed
-  container smoke tests before publication. Codex and Claude versions are unchanged.
+  Claude Code is no longer bundled in the image; it is downloaded from
+  Anthropic's npm package into your own storage on first start, so the first
+  start after this update needs internet access and takes a little longer.
+  License notices now ship in the image. T3 Code 0.1.10, Codex and Claude Code
+  versions are unchanged.
 developer: "T3 Tools Inc. (upstream); packaged by syntaxbube"
 website: https://t3.codes
 dependencies: []
