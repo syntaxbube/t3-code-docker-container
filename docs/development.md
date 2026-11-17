@@ -22,11 +22,17 @@ Only a newer stable `vX.Y.Z` release qualifies. Drafts and prereleases are exclu
 2. Builds a candidate Dockerfile and tests it on native GitHub runners for both architectures.
 3. Publishes tested images and assembles a multi-platform manifest.
 4. Updates the Dockerfile, release notes, manifest digest in the Compose reference, and the main README's **Pinned tools** version.
-5. Pushes the release commit and tag together only if `main` has not changed since candidate preparation.
+5. Pushes the release commit to an `update-t3-<version>` branch and opens a pull request, only if `main` has not changed since candidate preparation. Merging it lets [Tag Umbrel release](../.github/workflows/tag-release.yml) create the `v<version>-umbrel.1` tag.
 
-Codex and Claude Code stay pinned; this automatic updater only advances upstream T3 Code. Failed checks do not alter the store package. If `main` changes during the build, promotion stops and a subsequent run can retry. Umbrel exposes the new package as an update; the workflow does not force-update running installations.
+Codex stays pinned in the Dockerfile, and the Claude Code version is pinned in `T3_CLAUDE_CODE_VERSION`; this automatic updater only advances upstream T3 Code. Failed checks do not alter the store package. If `main` changes during the build, promotion stops and a subsequent run can retry. Umbrel exposes the new package as an update; the workflow does not force-update running installations.
 
-The workflow uses the built-in `GITHUB_TOKEN` with repository-write and package-publishing permissions; no separate token is required. [Commits pushed with `GITHUB_TOKEN` do not trigger another image workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow). GitHub may [disable scheduled workflows after 60 days of inactivity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) for public repositories; maintainers can re-enable them in Actions.
+The workflow uses the built-in `GITHUB_TOKEN` with repository-write, pull-request, and package-publishing permissions; no separate token is required. In **Settings → Actions → General**, enable *Allow GitHub Actions to create and approve pull requests* so the updater can open PRs. Pull requests opened with `GITHUB_TOKEN` do not start `pull_request` workflows; close and reopen the PR, or push to it, if required checks must run. [Commits pushed with `GITHUB_TOKEN` do not trigger another image workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow). GitHub may [disable scheduled workflows after 60 days of inactivity](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) for public repositories; maintainers can re-enable them in Actions.
+
+## Licensing rules for the image
+
+- **Never bake proprietary software into the published image.** Claude Code is "All rights reserved" (Anthropic) and is installed at runtime into the user's volume by `container/claude-install.mjs`. `scripts/smoke.sh` fails if it appears in the image.
+- Keep `LICENSE`, `THIRD_PARTY_NOTICES.md` and `licenses/` in the image (`/usr/share/licenses/t3-umbrel/`). Update them when adding or upgrading a bundled component, and check each new component's license allows redistribution before adding it to the Dockerfile.
+- The upstream T3 archive is redistributed unmodified; it contains the proprietary `@cursor/sdk` (see the notices).
 
 ## Image publishing and manual releases
 
@@ -42,7 +48,7 @@ For a manual release:
 
 ### Build and CI performance notes
 
-- The [Dockerfile](../Dockerfile) downloads T3 Code and `cloudflared` in separate BuildKit stages that run in parallel with the apt and npm layers. The T3 Code layer is last, so a T3 version bump (the most frequent change) reuses the cached apt and Codex/Claude Code layers. Keep the `ARG T3_VERSION=`, `test "$T3_VERSION" = …;` and `checksum=` line formats unchanged; `scripts/update_t3.py` rewrites them.
+- The [Dockerfile](../Dockerfile) downloads T3 Code and `cloudflared` in separate BuildKit stages that run in parallel with the apt and npm layers. The T3 Code layer is last, so a T3 version bump (the most frequent change) reuses the cached apt and Codex layers. Keep the `ARG T3_VERSION=`, `test "$T3_VERSION" = …;` and `checksum=` line formats unchanged; `scripts/update_t3.py` rewrites them.
 - Image builds and smoke tests run in parallel with the unit and browser tests. Only the multi-platform manifest (`manifest` job) and update promotion require the tests to pass.
 - Superseded pull request runs are cancelled automatically.
 

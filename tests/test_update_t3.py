@@ -36,7 +36,7 @@ class UpdateTests(unittest.TestCase):
         self.assertIn('checksum=' + 'a'*64, result)
         self.assertIn('checksum=' + 'b'*64, result)
         for line in source.splitlines():
-            if line.startswith(('ARG CODEX_VERSION=', 'ARG CLAUDE_VERSION=')):
+            if line.strip().startswith(('ARG CODEX_VERSION=', 'T3_CLAUDE_CODE_VERSION=')):
                 self.assertIn(line, result)
 
 

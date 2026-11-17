@@ -19,7 +19,7 @@ test('browser form submission preserves its origin and pairs successfully', { sk
   await new Promise(resolve => gateway.listen(0, '127.0.0.1', resolve));
   const origin = `http://127.0.0.1:${gateway.address().port}`;
   const profile = await mkdtemp(join(tmpdir(), 't3-browser-test-'));
-  const browser = spawn(process.env.CHROMIUM_PATH, ['--headless', '--no-sandbox', '--disable-gpu', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  const browser = spawn(process.env.CHROMIUM_PATH, ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   let socket;
   t.after(async () => {
     socket?.close();
@@ -30,14 +30,12 @@ test('browser form submission preserves its origin and pairs successfully', { sk
     upstream.closeAllConnections(); upstream.close();
     await rm(profile, { recursive: true, force: true, maxRetries: 5 });
   });
+  let output = '';
   const endpoint = await new Promise((resolve, reject) => {
-    // Accumulate stderr: the DevTools line can be split across chunks, and
-    // Chromium's own output is the only clue when CI fails to start it.
-    let output = '';
-    const fail = reason => { clearTimeout(timer); reject(new Error(`${reason}\n--- chromium stderr (last 2000 chars) ---\n${output.slice(-2000)}`)); };
+    const fail = reason => reject(new Error(`${reason}\n--- chromium stderr ---\n${output.slice(-2000)}`));
     const timer = setTimeout(() => fail('Chromium did not expose DevTools'), 20000);
-    browser.once('error', error => fail(`Chromium failed to start: ${error.message}`));
-    browser.once('exit', (code, signal) => fail(`Chromium exited early (code ${code}, signal ${signal})`));
+    browser.once('error', error => { clearTimeout(timer); reject(error); });
+    browser.once('exit', (code, signal) => { clearTimeout(timer); fail(`Chromium exited early (code ${code}, signal ${signal})`); });
     browser.stderr.on('data', data => {
       output += data.toString();
       const match = output.match(/DevTools listening on (ws:\/\/\S+)/);

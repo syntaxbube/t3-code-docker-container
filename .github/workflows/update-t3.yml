@@ -107,6 +107,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      pull-requests: write
     env:
       VERSION: ${{ needs.detect.outputs.version }}
       BASE_SHA: ${{ needs.detect.outputs.base }}
@@ -138,12 +139,20 @@ jobs:
       - run: pip install PyYAML
       - run: python scripts/validate.py
       - run: git diff --check
-      - name: Push verified update and tag together
+      - name: Push update branch and open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          BRANCH="update-t3-${VERSION}"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$BRANCH"
           git add Dockerfile README.md t3code-t3-code/umbrel-app.yml t3code-t3-code/docker-compose.yml
           git commit -m "Update T3 Code to stable ${VERSION}"
-          git tag "v${VERSION}-umbrel.1"
-          git push --atomic origin HEAD:main "refs/tags/v${VERSION}-umbrel.1"
-          echo "Published and pinned T3 Code ${VERSION} for AMD64 and ARM64." >> "$GITHUB_STEP_SUMMARY"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            gh pr create --base main --head "$BRANCH" \
+              --title "Update T3 Code to stable ${VERSION}" \
+              --body "Automated update to T3 Code ${VERSION}. Both architectures passed tests and smoke tests, and the multi-platform image is pinned by digest. Merging tags \`v${VERSION}-umbrel.1\` automatically."
+          fi
+          echo "Opened pull request for T3 Code ${VERSION} (branch ${BRANCH}). Merge it to release." >> "$GITHUB_STEP_SUMMARY"
