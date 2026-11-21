@@ -9,15 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 FROM fetch AS t3
 ARG TARGETARCH
-ARG T3_VERSION=0.1.10
+ARG T3_VERSION=0.1.11
 # Keep the entire upstream runtime tree (client assets and native modules included).
 RUN set -eu; \
     case "$TARGETARCH" in \
-      amd64) arch=x64; checksum=9bea9d36a217299a0af880e8c347b536ed6a9a2f5bf328a695d174d63628c5e8 ;; \
-      arm64) arch=arm64; checksum=5ffbd224f53d0f827279825347a7ebf5a7ac98ad5c1347d47409f30aa2a1e425 ;; \
+      amd64) arch=x64; checksum=2b691c07f5bcb5adea4a863d5324aae7db21bd6d82280cec7787836dcaa013e1 ;; \
+      arm64) arch=arm64; checksum=7d90a5af032fe0988a616403e0f51a6cb68eff7ed7a84bc40999cc3997dffd71 ;; \
       *) echo "Unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
     esac; \
-    test "$T3_VERSION" = 0.1.10; \
+    test "$T3_VERSION" = 0.1.11; \
     curl -fL --retry 3 "https://github.com/pingdotgg/t3code/releases/download/v${T3_VERSION}/t3-${T3_VERSION}-linux-${arch}.tar.gz" -o /tmp/t3.tar.gz; \
     echo "$checksum  /tmp/t3.tar.gz" | sha256sum -c -; \
     mkdir -p /out/opt/t3 /out/usr/local/bin; tar -xzf /tmp/t3.tar.gz -C /out/opt/t3 --strip-components=1; \
