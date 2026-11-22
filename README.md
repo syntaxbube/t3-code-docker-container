@@ -41,7 +41,7 @@
 1. In Umbrel, open **App Store → Community App Stores**.
 2. Add this store: `https://github.com/syntaxbube/t3-code-docker-container`.
 3. Install **T3 Code** and open it from the Umbrel dashboard.
-4. Enter the app password from Umbrel's app details and select **Connect to T3 Code**.
+4. Enter the app password from Umbrel's app details and select **Connect**.
 5. Go to **Settings → Providers**, enable Codex or Claude Code, and sign in.
 
 For Codex, select **Connect with ChatGPT**. For Claude Code, use the provider's sign-in flow. If needed, run `claude auth login` in the integrated terminal, follow the browser link, and paste the returned code into the terminal.
@@ -54,7 +54,7 @@ At `/umbrel`, previously paired browsers can select **Open T3 Code**. New pairin
 
 To use T3 Connect:
 
-1. On the `/umbrel` page, select **Set up T3 Connect remote access**.
+1. On the `/umbrel` page, select **Set up T3 Connect**.
 2. When prompted, enter **umbrel** as the username and your Umbrel app password.
 3. Select **Link / sign in**, open the HTTPS sign-in link shown on the page, and approve the device code on your device.
 4. Once the T3 server has restarted, use **Status** to check authentication and reachability. Sign in with the same T3 account in the official desktop/mobile client or at [app.t3.codes](https://app.t3.codes).
@@ -71,7 +71,7 @@ Use Umbrel to install app updates. Running `t3 update` or global npm updates ins
 
 Pinned tools: T3 Code **0.1.11**, Codex **0.167.0**, Claude Code **2.1.319** (downloaded on first start, see below).
 
-**Claude Code is not bundled in the image.** It is proprietary software from Anthropic, so on first start the container downloads it from the npm registry into your own persistent storage (`/home/node/.claude-cli`). The first start therefore takes a little longer and needs internet access. Your use of it is subject to Anthropic's terms. Set the environment variable `T3_INSTALL_CLAUDE_CODE=0` to skip the download. If it fails, the rest of the app still starts and the install is retried on the next restart.
+**Claude Code is not bundled in the image.** It is proprietary software from Anthropic, so on first start the container downloads it in the background from the npm registry into your own persistent storage (`/home/node/.claude-cli`). T3 Code and Codex start immediately while Claude Code finishes installing (requiring internet access on first start). Your use of it is subject to Anthropic's terms. Set the environment variable `T3_INSTALL_CLAUDE_CODE=0` to skip the download. If it fails, the rest of the app continues running and the install is retried on the next restart.
 
 Codex and Claude Code remain pinned independently of automatic T3 Code updates. The [development guide](docs/development.md) explains how releases are built and published.
 

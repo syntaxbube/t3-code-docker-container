@@ -5,23 +5,42 @@ import { createConnectHandler } from '../container/connect.mjs';
 
 test('Connect setup protects device codes and mutations', async t => {
   const calls = [];
-  const handler = createConnectHandler({ password: 'secret', controller: { snapshot: () => ({ running: true, output: '<script>bad</script> https://example.com/approve' }), run: action => calls.push(action) } });
+  const handler = createConnectHandler({ password: 'secret', controller: { snapshot: () => ({ running: true, output: '<script>bad</script> https://example.com/approve.' }), run: action => calls.push(action) } });
   const server = http.createServer(handler);
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   t.after(() => { server.closeAllConnections(); server.close(); });
   const origin = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(origin)).status, 401);
+  const malformed = 'Basic ' + Buffer.from('secret').toString('base64');
+  assert.equal((await fetch(origin, { headers: { authorization: malformed } })).status, 401);
   const authorization = 'Basic ' + Buffer.from('umbrel:secret').toString('base64');
   const page = await fetch(origin, { headers: { authorization } });
   const html = await page.text();
   assert.match(html, /&lt;script&gt;/);
   assert.doesNotMatch(html, /<script>/);
+  assert.match(html, /href="https:\/\/example\.com\/approve"/);
+  assert.doesNotMatch(html, /href="https:\/\/example\.com\/approve\."/);
   assert.equal(page.headers.get('cache-control'), 'no-store');
   const post = requestOrigin => fetch(origin, { method: 'POST', headers: { authorization, origin: requestOrigin }, body: 'action=link' });
   assert.equal((await post('http://evil.test')).status, 403);
   assert.equal(calls.length, 0);
   await fetch(origin, { method: 'POST', headers: { authorization, origin }, body: 'action=link', redirect: 'manual' });
   assert.deepEqual(calls, ['link']);
+});
+
+test('Connect setup rate limits repeated wrong passwords without counting unauthenticated prompts', async t => {
+  const handler = createConnectHandler({ password: 'secret', controller: { snapshot: () => ({ running: false, output: 'ok' }), run() {} } });
+  const server = http.createServer(handler);
+  await new Promise(r => server.listen(0, '127.0.0.1', r));
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  for (let i = 0; i < 6; i++) assert.equal((await fetch(origin)).status, 401);
+  const validAuth = 'Basic ' + Buffer.from('umbrel:secret').toString('base64');
+  assert.equal((await fetch(origin, { headers: { authorization: validAuth } })).status, 200);
+  const badAuth = 'Basic ' + Buffer.from('umbrel:wrong').toString('base64');
+  for (let i = 0; i < 5; i++) assert.equal((await fetch(origin, { headers: { authorization: badAuth } })).status, 401);
+  assert.equal((await fetch(origin, { headers: { authorization: badAuth } })).status, 429);
+  assert.equal((await fetch(origin, { headers: { authorization: validAuth } })).status, 429);
 });
 
 test('headless linking is single-flight and restarts only after success', async () => {

@@ -7,9 +7,12 @@ import { ensureClaudeCode } from './claude-install.mjs';
 
 if (!process.env.APP_PASSWORD) throw new Error('APP_PASSWORD must be supplied by Umbrel');
 await mkdir('/home/node/projects', { recursive: true });
+
 let stopping = false;
 let restarting = false;
 let backend;
+const shutdown = new AbortController();
+
 function startBackend() {
   backend = spawn('t3', ['serve', '--host', '127.0.0.1', '--port', '3773'], { stdio: ['ignore', 'inherit', 'inherit'] });
   backend.on('error', error => { console.error(error.message); process.exit(1); });
@@ -17,18 +20,25 @@ function startBackend() {
     if (!restarting) { gateway.close(); process.exit(stopping ? 0 : code || 1); }
   });
 }
-const connect = createConnectController({ restart: async () => {
-  if (stopping) return;
-  restarting = true;
-  try {
-    await new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { backend.kill('SIGKILL'); reject(new Error('T3 server did not stop in time')); }, 20000);
-      backend.once('exit', () => { clearTimeout(timer); resolve(); });
-      backend.kill('SIGTERM');
-    });
-    if (!stopping) startBackend();
-  } finally { restarting = false; }
-} });
+
+const connect = createConnectController({
+  restart: async () => {
+    if (stopping) return;
+    restarting = true;
+    try {
+      const current = backend;
+      if (current && current.exitCode === null && current.signalCode === null) {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => { current.kill('SIGKILL'); reject(new Error('T3 server did not stop in time')); }, 20000);
+          current.once('exit', () => { clearTimeout(timer); resolve(); });
+          current.kill('SIGTERM');
+        });
+      }
+      if (!stopping) startBackend();
+    } finally { restarting = false; }
+  },
+});
+
 const exec = promisify(execFile);
 const gateway = createGateway({
   password: process.env.APP_PASSWORD,
@@ -40,16 +50,19 @@ const gateway = createGateway({
     return credential;
   },
 });
+
 gateway.listen(8080, '0.0.0.0');
-await ensureClaudeCode();
-if (!stopping) startBackend();
+startBackend();
+void ensureClaudeCode({ signal: shutdown.signal });
+
 function stop(signal = 'SIGTERM') {
   if (stopping) return;
   stopping = true;
+  shutdown.abort();
   connect.stop();
   gateway.close();
   gateway.closeAllConnections();
-  if (!backend) process.exit(0);
+  if (!backend || backend.exitCode !== null || backend.signalCode !== null) process.exit(0);
   backend.kill(signal);
   setTimeout(() => { backend.kill('SIGKILL'); process.exit(1); }, 20000).unref();
 }

@@ -18,7 +18,7 @@ description: >-
   sign-in flow or run claude auth login in the integrated terminal.
 
 
-  For remote access, open Set up T3 Connect remote access on the setup page,
+  For remote access, open Set up T3 Connect on the setup page,
   sign in with username umbrel and your app password, then select Link / sign in.
   Approve the displayed device code to connect this server to your T3 account.
 
