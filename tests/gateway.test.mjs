@@ -13,7 +13,11 @@ test('onboarding requires password and same-origin POST; proxy preserves HTTP an
   await new Promise(r => gateway.listen(0, '127.0.0.1', r));
   t.after(() => { gateway.closeAllConnections(); gateway.close(); upstream.closeAllConnections(); upstream.close(); });
   const origin = `http://127.0.0.1:${gateway.address().port}`;
-  assert.match(await (await fetch(`${origin}/umbrel`)).text(), /password/);
+  const welcome = await fetch(`${origin}/umbrel?foo=1`);
+  assert.equal(welcome.status, 200);
+  assert.ok(Number(welcome.headers.get('content-length')) > 0);
+  assert.doesNotMatch(welcome.headers.get('content-security-policy'), /font-src/);
+  assert.match(await welcome.text(), /password/);
   const post = (password, requestOrigin = origin) => fetch(`${origin}/umbrel/pair`, { method: 'POST', headers: { origin: requestOrigin, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ password }), redirect: 'manual' });
   assert.equal((await post('wrong')).status, 403);
   assert.equal((await post('secret', 'http://evil.example')).status, 403);
@@ -39,7 +43,23 @@ test('onboarding requires password and same-origin POST; proxy preserves HTTP an
   });
 });
 
-test('backend abort terminates the proxied response', async (t) => {
+test('pairing throttles repeated wrong password attempts', async (t) => {
+  const gateway = createGateway({ password: 'secret', upstreamPort: 1, mint: async () => 'token' });
+  await new Promise(r => gateway.listen(0, '127.0.0.1', r));
+  t.after(() => { gateway.closeAllConnections(); gateway.close(); });
+  const origin = `http://127.0.0.1:${gateway.address().port}`;
+  const attempt = password => fetch(`${origin}/umbrel/pair`, {
+    method: 'POST',
+    headers: { origin, 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ password }),
+    redirect: 'manual',
+  });
+  for (let i = 0; i < 5; i++) assert.equal((await attempt('wrong')).status, 403);
+  assert.equal((await attempt('wrong')).status, 429);
+  assert.equal((await attempt('secret')).status, 429);
+});
+
+test('backend abort terminates the proxied response without appending error text', async (t) => {
   const upstream = http.createServer((req, res) => {
     res.writeHead(200, { 'content-length': '10000' });
     res.write('hello');
@@ -49,11 +69,32 @@ test('backend abort terminates the proxied response', async (t) => {
   const gateway = createGateway({ password: 'secret', upstreamPort: upstream.address().port, mint: async () => 'token' });
   await new Promise(r => gateway.listen(0, '127.0.0.1', r));
   t.after(() => { gateway.closeAllConnections(); gateway.close(); upstream.closeAllConnections(); upstream.close(); });
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 1000);
-  try {
-    const response = await fetch(`http://127.0.0.1:${gateway.address().port}/abort`, { signal: controller.signal });
-    await assert.rejects(response.text());
-    assert.equal(controller.signal.aborted, false, 'gateway must close the response before client timeout');
-  } finally { clearTimeout(timeout); }
+  const result = await new Promise(resolve => {
+    const req = http.get(`http://127.0.0.1:${gateway.address().port}/abort`, res => {
+      let body = '';
+      res.on('data', chunk => { body += chunk; });
+      res.on('error', err => resolve({ complete: res.complete, body, err }));
+      res.on('close', () => resolve({ complete: res.complete, body }));
+    });
+    req.on('error', err => resolve({ complete: false, body: '', err }));
+  });
+  assert.equal(result.complete, false);
+  assert.doesNotMatch(result.body, /T3 Code is starting/);
+});
+
+test('proxy reuses keep-alive connections to upstream across sequential requests', async (t) => {
+  let upstreamConnections = 0;
+  const upstream = http.createServer((req, res) => res.end(req.url));
+  upstream.on('connection', () => { upstreamConnections++; });
+  await new Promise(r => upstream.listen(0, '127.0.0.1', r));
+  const gateway = createGateway({ password: 'secret', upstreamPort: upstream.address().port, mint: async () => 'token' });
+  await new Promise(r => gateway.listen(0, '127.0.0.1', r));
+  t.after(() => { gateway.closeAllConnections(); gateway.close(); upstream.closeAllConnections(); upstream.close(); });
+  const origin = `http://127.0.0.1:${gateway.address().port}`;
+  for (let i = 0; i < 4; i++) {
+    const res = await fetch(`${origin}/item/${i}`, { headers: { connection: 'close' } });
+    assert.equal(res.status, 200);
+    assert.equal(await res.text(), `/item/${i}`);
+  }
+  assert.equal(upstreamConnections, 1);
 });

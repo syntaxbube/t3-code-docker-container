@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
@@ -23,9 +23,11 @@ test('browser form submission preserves its origin and pairs successfully', { sk
   let socket;
   t.after(async () => {
     socket?.close();
-    const exited = once(browser, 'exit');
-    browser.kill('SIGTERM');
-    await exited;
+    if (browser.exitCode === null && browser.signalCode === null) {
+      const exited = once(browser, 'exit');
+      browser.kill('SIGTERM');
+      await exited;
+    }
     gateway.closeAllConnections(); gateway.close();
     upstream.closeAllConnections(); upstream.close();
     await rm(profile, { recursive: true, force: true, maxRetries: 5 });
@@ -46,6 +48,14 @@ test('browser form submission preserves its origin and pairs successfully', { sk
   await once(socket, 'open');
   let sequence = 0;
   const pending = new Map();
+  const loadWaiters = [];
+  const failAll = err => {
+    for (const { reject } of pending.values()) reject(err);
+    pending.clear();
+    while (loadWaiters.length) loadWaiters.shift().reject(err);
+  };
+  socket.addEventListener('error', () => failAll(new Error('DevTools WebSocket error')));
+  socket.addEventListener('close', () => failAll(new Error('DevTools WebSocket closed')));
   socket.addEventListener('message', event => {
     const message = JSON.parse(event.data);
     if (pending.has(message.id)) {
@@ -53,6 +63,13 @@ test('browser form submission preserves its origin and pairs successfully', { sk
       pending.delete(message.id);
       if (message.error) reject(new Error(JSON.stringify(message.error)));
       else resolve(message.result);
+    } else if (message.method === 'Page.loadEventFired') {
+      for (let i = loadWaiters.length - 1; i >= 0; i--) {
+        if (loadWaiters[i].sessionId === message.sessionId) {
+          const [waiter] = loadWaiters.splice(i, 1);
+          waiter.resolve();
+        }
+      }
     }
   });
   const command = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
@@ -64,15 +81,7 @@ test('browser form submission preserves its origin and pairs successfully', { sk
   const { sessionId } = await command('Target.attachToTarget', { targetId, flatten: true });
   const call = (method, params) => command(method, params, sessionId);
   await call('Page.enable');
-  const loaded = () => new Promise(resolve => {
-    const listener = event => {
-      const message = JSON.parse(event.data);
-      if (message.sessionId === sessionId && message.method === 'Page.loadEventFired') {
-        socket.removeEventListener('message', listener); resolve();
-      }
-    };
-    socket.addEventListener('message', listener);
-  });
+  const loaded = () => new Promise((resolve, reject) => loadWaiters.push({ sessionId, resolve, reject }));
   const firstLoad = loaded();
   await call('Page.navigate', { url: `${origin}/umbrel` });
   await firstLoad;
@@ -80,11 +89,6 @@ test('browser form submission preserves its origin and pairs successfully', { sk
     await call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: false });
     const layout = await call('Runtime.evaluate', { expression: 'document.documentElement.scrollWidth <= window.innerWidth', returnByValue: true });
     assert.equal(layout.result.value, true, `setup must fit ${width}px viewport`);
-    if (process.env.SETUP_SCREENSHOTS_DIR) {
-      await mkdir(process.env.SETUP_SCREENSHOTS_DIR, { recursive: true });
-      const capture = await call('Page.captureScreenshot', { captureBeyondViewport: true });
-      await writeFile(join(process.env.SETUP_SCREENSHOTS_DIR, `setup-${width}.png`), Buffer.from(capture.data, 'base64'));
-    }
   }
   const submitted = loaded();
   await call('Runtime.evaluate', { expression: `document.querySelector('input[name=password]').value = 'secret'; document.querySelector('form').requestSubmit()` });

@@ -5,7 +5,7 @@ This page is for the [T3 Code for Umbrel](../README.md) community package.
 ## I cannot connect a browser
 
 1. Open the app again from the Umbrel dashboard and locate the app password in Umbrel's app details.
-2. Enter it on the `/umbrel` setup screen, then select **Connect to T3 Code**.
+2. Enter it on the `/umbrel` setup screen, then select **Connect**.
 3. Pairing links expire after **five minutes**. If you opened an old link, start a fresh pairing from `/umbrel`.
 4. Already paired browsers can normally choose **Open T3 Code**. Native sessions persist through restarts.
 
@@ -16,13 +16,13 @@ If access still fails, check that the app is running and examine the logs. Note 
 Open **Settings → Providers** and enable the provider first.
 
 - **Codex:** choose **Connect with ChatGPT** and sign in with the appropriate ChatGPT account.
-- **Claude Code:** it is downloaded from npm into `/home/node/.claude-cli` on first start (it is not bundled in the image), so the first start needs internet access and takes longer. Check the container logs for `Claude Code install failed`; restarting retries the download. If `T3_INSTALL_CLAUDE_CODE=0` is set, no download happens. Then use the provider sign-in flow. If it does not complete, open the T3 Code integrated terminal, run `claude auth login`, open the CLI-provided link, and paste the returned code into the terminal.
+- **Claude Code:** it is downloaded in the background from npm into `/home/node/.claude-cli` on first start (it is not bundled in the image), so first-time availability needs internet access and a moment to finish installing while T3 Code and Codex are already running. Check the container logs for `Claude Code install failed`; restarting retries the download. If `T3_INSTALL_CLAUDE_CODE=0` is set, no download happens. Then use the provider sign-in flow. If it does not complete, open the T3 Code integrated terminal, run `claude auth login`, open the CLI-provided link, and paste the returned code into the terminal.
 
 These providers require your own accounts and are subject to their own access rules, subscriptions, and potential charges. Their availability is not provided by this Umbrel package.
 
 ## T3 Connect remote access is not working
 
-1. Open **Set up T3 Connect remote access** from `/umbrel`.
+1. Open **Set up T3 Connect** from `/umbrel`.
 2. When asked for credentials, use **umbrel** as the username and your Umbrel app password.
 3. Choose **Link / sign in**, open the HTTPS authorization link on your own device, and approve the shown device code.
 4. After linking, allow the T3 server restart to complete; linking interrupts tasks that were running.

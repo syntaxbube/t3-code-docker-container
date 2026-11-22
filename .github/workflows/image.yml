@@ -3,8 +3,33 @@ on:
   push:
     branches: [main]
     tags: ['v*']
-    paths: ['Dockerfile', 'container/**', 'scripts/**', 'tests/**', '.github/workflows/**']
+    paths:
+      - 'Dockerfile'
+      - 'container/**'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
+      - 'licenses/**'
+      - 't3code-t3-code/**'
+      - 'umbrel-app-store.yml'
+      - 'scripts/smoke.sh'
+      - 'scripts/validate.py'
+      - 'scripts/update_t3.py'
+      - 'tests/**'
+      - '.github/workflows/image.yml'
   pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'container/**'
+      - 'LICENSE'
+      - 'THIRD_PARTY_NOTICES.md'
+      - 'licenses/**'
+      - 't3code-t3-code/**'
+      - 'umbrel-app-store.yml'
+      - 'scripts/smoke.sh'
+      - 'scripts/validate.py'
+      - 'scripts/update_t3.py'
+      - 'tests/**'
+      - '.github/workflows/image.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -26,7 +51,7 @@ jobs:
           export CHROMIUM_PATH="$(command -v google-chrome)"
           test -x "$CHROMIUM_PATH"
           node --test tests/*.test.mjs
-      - run: pip install PyYAML
+      - run: python3 -c 'import yaml' 2>/dev/null || pip install --quiet PyYAML
       - run: python scripts/validate.py
       - run: python -m unittest discover -s tests -p 'test_*.py'
   # Image build and smoke tests run in parallel with the unit/browser tests; only the
@@ -57,7 +82,7 @@ jobs:
           load: true
           tags: t3-umbrel:test
           cache-from: type=gha,scope=${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+          cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=max,scope={0}', matrix.arch) || '' }}
       - run: bash scripts/smoke.sh t3-umbrel:test
       - name: Publish tested architecture
         if: github.event_name != 'pull_request'

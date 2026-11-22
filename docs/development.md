@@ -48,7 +48,7 @@ For a manual release:
 
 ### Build and CI performance notes
 
-- The [Dockerfile](../Dockerfile) downloads T3 Code and `cloudflared` in separate BuildKit stages that run in parallel with the apt and npm layers. The T3 Code layer is last, so a T3 version bump (the most frequent change) reuses the cached apt and Codex layers. Keep the `ARG T3_VERSION=`, `test "$T3_VERSION" = …;` and `checksum=` line formats unchanged; `scripts/update_t3.py` rewrites them.
+- The [Dockerfile](../Dockerfile) downloads T3 Code and `cloudflared` and installs Codex in separate parallel BuildKit stages with no extra `apt-get` download stage. The T3 Code layer is last among the tool layers, so a T3 version bump (the most frequent change) reuses the cached apt and Codex layers. Keep the `ARG T3_VERSION=`, `test "$T3_VERSION" = …;` and `checksum=` line formats unchanged; `scripts/update_t3.py` rewrites them.
 - Image builds and smoke tests run in parallel with the unit and browser tests. Only the multi-platform manifest (`manifest` job) and update promotion require the tests to pass.
 - Superseded pull request runs are cancelled automatically.
 
@@ -85,9 +85,3 @@ The Umbrel proxy's WebSocket behavior and provider OAuth flows cannot be fully v
 ## Contributions
 
 Open an [issue](https://github.com/syntaxbube/t3-code-docker-container/issues) for packaging bugs and include the Umbrel version, architecture, app/package version, the steps to reproduce, and sanitized logs. Never post credentials, app passwords, tokens, pairing URLs, or device codes. This is an independent community project, not an official T3 Tools or Umbrel release.
-
-## Frontend components
-
-The optional React/TypeScript component preview is documented in
-[frontend.md](frontend.md). It uses shadcn-compatible `/components/ui` paths and
-Tailwind CSS. Its build is independent of the container-served setup page.

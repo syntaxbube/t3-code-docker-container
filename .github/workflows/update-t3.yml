@@ -43,14 +43,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.detect.outputs.base }}
-      - uses: actions/setup-node@v4
+      - uses: actions/download-artifact@v4
         with:
-          node-version: '24'
-      - name: Test gateway and real browser form submission
-        run: |
-          export CHROMIUM_PATH="$(command -v google-chrome)"
-          test -x "$CHROMIUM_PATH"
-          node --test tests/*.test.mjs
+          name: t3-candidate
+          path: /tmp/t3-candidate
+      - run: cp /tmp/t3-candidate/Dockerfile Dockerfile
       - name: Test updater
         run: python -m unittest discover -s tests -p 'test_*.py'
   build:
@@ -136,7 +133,7 @@ jobs:
             "$IMAGE:candidate-${VERSION}-${BASE_SHA}-arm64"
           DIGEST=$(docker buildx imagetools inspect "$IMAGE:$TAG" | awk '$1 == "Digest:" { print $2; exit }')
           python scripts/update_t3.py promote --candidate /tmp/t3-candidate --digest "$DIGEST"
-      - run: pip install PyYAML
+      - run: python3 -c 'import yaml' 2>/dev/null || pip install --quiet PyYAML
       - run: python scripts/validate.py
       - run: git diff --check
       - name: Push update branch and open pull request

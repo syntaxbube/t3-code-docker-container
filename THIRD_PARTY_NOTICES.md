@@ -15,7 +15,7 @@ texts under `/usr/share/licenses/t3-umbrel/`.
 | [cloudflared](https://github.com/cloudflare/cloudflared) | Apache-2.0, Copyright Cloudflare, Inc. | Unmodified release binary, checksum-verified. Text: [licenses/cloudflared-Apache-2.0.txt](licenses/cloudflared-Apache-2.0.txt). |
 | [Claude Code](https://github.com/anthropics/claude-code) | Proprietary, © Anthropic PBC. All rights reserved. Use is subject to Anthropic's [Commercial Terms](https://www.anthropic.com/legal/commercial-terms) or consumer terms, depending on your account. | **Not included in the published image and not redistributed by this project.** On first start, the container downloads it from the npm registry into your own persistent storage (`/home/node/.claude-cli`), so you obtain it directly from Anthropic under your own terms. Set `T3_INSTALL_CLAUDE_CODE=0` to disable this. |
 | Debian packages and Node.js (base image `node:24-bookworm-slim`) | Various (mostly GPL/LGPL/MIT/BSD) | License texts are in `/usr/share/doc/*/copyright` inside the image. |
-| Unslop methodology (setup page design) | CC BY 4.0, Damir Sokolovsky ([@heydamir](https://heydamir.design/unslop)) | Credited in `design/glass-setup/README.md` and the served page source. |
+| Unslop methodology (setup page design) | CC BY 4.0, Damir Sokolovsky ([@heydamir](https://heydamir.design/unslop)) | Credited in `container/welcome.html` and the served page source. |
 
 ## Trademarks
 
