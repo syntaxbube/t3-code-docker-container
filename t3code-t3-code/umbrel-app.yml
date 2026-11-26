@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: Development
 name: T3 Code
-version: "0.1.11-umbrel.1"
+version: "0.1.12-umbrel.1"
 tagline: Run Codex and Claude on your Umbrel
 icon: https://raw.githubusercontent.com/syntaxbube/t3-code-docker-container/main/assets/icon.svg
 description: >-
@@ -32,7 +32,7 @@ description: >-
   This community package is independently maintained and is not an official
   T3 Tools or Umbrel release.
 releaseNotes: >-
-  Updated T3 Code to stable release 0.1.11. Both Linux architectures passed
+  Updated T3 Code to stable release 0.1.12. Both Linux architectures passed
   container smoke tests before publication. Codex and Claude versions are unchanged.
 developer: "T3 Tools Inc. (upstream); packaged by syntaxbube"
 website: https://t3.codes
