@@ -5,15 +5,15 @@ ARG NODE_IMAGE=node:24-bookworm-slim
 
 FROM ${NODE_IMAGE} AS t3
 ARG TARGETARCH
-ARG T3_VERSION=0.1.11
+ARG T3_VERSION=0.1.13
 # Keep the entire upstream runtime tree (client assets and native modules included).
 RUN set -eu; \
     case "$TARGETARCH" in \
-      amd64) arch=x64; checksum=2b691c07f5bcb5adea4a863d5324aae7db21bd6d82280cec7787836dcaa013e1 ;; \
-      arm64) arch=arm64; checksum=7d90a5af032fe0988a616403e0f51a6cb68eff7ed7a84bc40999cc3997dffd71 ;; \
+      amd64) arch=x64; checksum=64e0f8446d3f618b157d4e5a0a6808ab3c8bf1a1b3e44eab3100e554be05e5d7 ;; \
+      arm64) arch=arm64; checksum=c553c17db07030d032808989427db5022bf04027ebcec2218c69fb1a5fa1377f ;; \
       *) echo "Unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
     esac; \
-    test "$T3_VERSION" = 0.1.11; \
+    test "$T3_VERSION" = 0.1.13; \
     node -e ' \
       const { createHash } = require("node:crypto"); \
       const { createWriteStream, unlinkSync } = require("node:fs"); \
